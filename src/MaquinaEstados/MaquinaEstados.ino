@@ -34,7 +34,7 @@ uint8_t button[4] = {
 };
 
 // Este arreglo contiene el último estado conocido de cada línea
-uint8_t button_state[4];
+uint8_t button_estate[4];
 
 /********************************* Globales *********************************/
 // Estado de nuestro autómata
@@ -53,6 +53,7 @@ uint8_t b = 0;
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(1, RGB_LED, NEO_RGB + NEO_KHZ800);
 
+/*************************** Inicialización *********************************/
 void setup() {
   // Configurar como PULL-UP para ahorrar resistencias
   pinMode(button[BTN_MENU], INPUT_PULLUP);
@@ -61,10 +62,10 @@ void setup() {
   pinMode(button[BTN_DOWN], INPUT_PULLUP);
 
   // Se asume que el estado inicial es HIGH
-  button_state[0] = HIGH;
-  button_state[1] = HIGH;
-  button_state[2] = HIGH;
-  button_state[3] = HIGH;
+  button_estate[0] = HIGH;
+  button_estate[1] = HIGH;
+  button_estate[2] = HIGH;
+  button_estate[3] = HIGH;
 
   // Iniciar helpers
   pixels.begin();
@@ -75,11 +76,24 @@ void setup() {
   printHome();
 }
 
+// Facilita la detección de flancos de subidan en los pines
+// monitoreados. Asume la existencia de un arreglo button
+// con la asignación actual de pines y un arreglo button_estate
+// con los valores de línea
+uint8_t flancoSubida(int btn) {
+  uint8_t valor_nuevo = digitalRead(button[btn]);
+  uint8_t result = button_estate[btn]!=valor_nuevo && valor_nuevo == 1;
+  button_estate[btn] = valor_nuevo;
+  return result;
+}
+
+// Despliega el color seleccionado en el LED
 void showColor() {
   pixels.setPixelColor(0, pixels.Color(r,g,b));
   pixels.show();
 }
 
+/******************* Utilitarios de dibujado ****************************/
 void printHome() {
   lcd.clear();
   lcd.setCursor(0,0);
@@ -108,13 +122,6 @@ void printBlue() {
   printColor();
 }
 
-uint8_t flancoSubida(int btn) {
-  uint8_t valor_nuevo = digitalRead(button[btn]);
-  uint8_t result = button_state[btn]!=valor_nuevo && valor_nuevo == 1;
-  button_state[btn] = valor_nuevo;
-  return result;
-}
-
 void printColor() {
   lcd.setCursor(0,1);
   lcd.print("RGB: ");
@@ -125,27 +132,28 @@ void printColor() {
   lcd.print(b, DEC);
 }
 
+// Máquina de estados
 void loop() {
   switch(estado) {
-    case S_HOME:
-      if(flancoSubida(BTN_MENU)) {
+    case S_HOME: /*** INICIO ESTADO S_HOME ***/
+      if(flancoSubida(BTN_MENU)) { // Transición BTN_MENU
         estado = S_SET_R;
         printRed();
         break;
       }
-      break;
-    case S_SET_R:
-      if(flancoSubida(BTN_MENU)) {
+      break; /*** FIN ESTADO S_HOME ***/
+    case S_SET_R: /*** INICIO ESTADO S_SET_R ***/
+      if(flancoSubida(BTN_MENU)) { // Transición BTN_MENU
         estado = S_SET_G;
         printGreen();
         break;
       }
-      if(flancoSubida(BTN_EXIT)) {
+      if(flancoSubida(BTN_EXIT)) { // Transición BTN_EXIT
         estado = S_HOME;
         printHome();
         break;
       }
-      if(flancoSubida(BTN_UP)) {
+      if(flancoSubida(BTN_UP)) { // Transición BTN_UP
         if(r<255) {
           r++;
         } else {
@@ -155,7 +163,7 @@ void loop() {
         printRed();
         break;
       }
-      if(flancoSubida(BTN_DOWN)) {
+      if(flancoSubida(BTN_DOWN)) { // Transición BTN_DWN
         if(r>0) {
           r--;
         } else {
@@ -165,19 +173,19 @@ void loop() {
         printRed();
         break;
       }
-      break;
-    case S_SET_G:
-      if(flancoSubida(BTN_MENU)) {
+      break; /*** FIN ESTADO S_SET_R ***/
+    case S_SET_G: /*** INICIA ESTADO S_SET_G ***/
+      if(flancoSubida(BTN_MENU)) { // Transición BTN_MENU
         estado = S_SET_B;
         printBlue();
         break;
       }
-      if(flancoSubida(BTN_EXIT)) {
+      if(flancoSubida(BTN_EXIT)) { // Transición BTN_EXIT
         estado = S_HOME;
         printHome();
         break;
       }
-      if(flancoSubida(BTN_UP)) {
+      if(flancoSubida(BTN_UP)) { // Transición BTN_UP
         if(g<255) {
           g++;
         } else {
@@ -197,19 +205,19 @@ void loop() {
         printGreen();
         break;
       }
-      break;
-    case S_SET_B:
-      if(flancoSubida(BTN_MENU)) {
+      break; /*** FIN ESTADO S_SET_R ***/
+    case S_SET_B: /*** INICIA ESTADO S_SET_B ***/
+      if(flancoSubida(BTN_MENU)) { // Transición BTN_MENU
         estado = S_SET_R;
         printRed();
         break;
       }
-      if(flancoSubida(BTN_EXIT)) {
+      if(flancoSubida(BTN_EXIT)) { // Transición BTN_EXIT
         estado = S_HOME;
         printHome();
         break;
       }
-      if(flancoSubida(BTN_UP)) {
+      if(flancoSubida(BTN_UP)) { // Transición BTN_UP
         if(b<255) {
           b++;
         } else {
@@ -219,7 +227,7 @@ void loop() {
         printBlue();
         break;
       }
-      if(flancoSubida(BTN_DOWN)) {
+      if(flancoSubida(BTN_DOWN)) { // Transición BTN_DWN
         if(b>0) {
           b--;
         } else {
@@ -229,6 +237,6 @@ void loop() {
         printBlue();
         break;
       }
-      break;
+      break; /*** FIN ESTADO S_SET_R ***/
   };
 }
