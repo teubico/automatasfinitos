@@ -1,5 +1,7 @@
 # automatasfinitos
-Sketch de ejemplo en Arduino para utilización de autómatas finitos.
+Dentro del directorio /src encontraras el Sketch de ejemplo en Arduino para utilización de autómatas finitos.
+
+Y dentro del directorio /fzz encontraras el esquemático del circuito ejemplo en varios formatos este se a realizadon con [Fritzing](http://fritzing.org/).
 
 ![Esquemático en Fritzing por @klhernandez42](https://raw.githubusercontent.com/klhernandez42/automatasfinitos/master/fzz/automatasFinitos_.png)
 
